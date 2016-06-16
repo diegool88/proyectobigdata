@@ -2,6 +2,7 @@ import couchdb
 import urllib2
 import json
 import threading
+import os
 
 class NoMoreRows(Exception):
     def __init__(self, value):
@@ -73,7 +74,8 @@ class FacebookPostsHarvester:
                 ###Get all comments of the post###
                 #get_fb_data(akey, asecret, graph_url, str(item['id']) + comments_path)
             except:
-                print "Already exists"
+                os.system('clear')
+                print "Post with id: " + item['id'] + " Already exists!..."
                 pass
             #return True
         #Loop to next page
@@ -98,7 +100,8 @@ class FacebookPostsHarvester:
                 doc = self.db.save(item)
                 print "SAVED" + str(doc) +"=>" + str(item)
             except:
-                print "Already exists"
+                os.system('clear')
+                print "Comment with id: " + item['id'] + " Already exists!..."
                 pass
         #Loop to next page
         #with FacebookPostsHarvester.lock:
