@@ -3,6 +3,7 @@ import urllib2
 import json
 import threading
 import os
+import time
 
 class NoMoreRows(Exception):
     def __init__(self, value):
@@ -76,6 +77,8 @@ class FacebookPostsHarvester:
             except:
                 os.system('clear')
                 print "Post with id: " + item['id'] + " Already exists!..."
+                #time.sleep(1)
+                self.save_comments_to_db(str(item['id']), json_data)
                 pass
             #return True
         #Loop to next page
@@ -102,6 +105,7 @@ class FacebookPostsHarvester:
             except:
                 os.system('clear')
                 print "Comment with id: " + item['id'] + " Already exists!..."
+                #time.sleep(1)
                 pass
         #Loop to next page
         #with FacebookPostsHarvester.lock:
@@ -122,7 +126,7 @@ def main():
     asecret = "4659fed15da699d1c05da51f2e267382"
     #####################################
     ###List of FB Pages to search in####
-    pages = ["MunicipioQuito","ObrasQuito","ecuavisa","rts.quito","elnoticierotc"]
+    pages = ["MunicipioQuito","ObrasQuito","ecuavisa","rts.quito","elnoticierotc","ultimasnoticiasec","comunidadquitoecuavisa"]
     ###Root URL of Facebook Graph###
     graph_url = "https://graph.facebook.com"
     #Create Facebook Harvest Object
