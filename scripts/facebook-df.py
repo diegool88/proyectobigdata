@@ -13,7 +13,7 @@ class NoMoreRows(Exception):
 
 class FacebookPostsHarvester:
     #Resource Path Array
-    search_path = ['/posts/','/comments/']
+    search_path = ['/feed/','/comments/']
     #Thread Lock
     lock = threading.RLock()
 
@@ -33,6 +33,7 @@ class FacebookPostsHarvester:
         for page in self.facebook_pages:
             #with FacebookPostsHarvester.lock:
             print 'Harvesting Posts and Comments of page ' + page + '....'
+            # Page Posts/Feed
             request_url = self.create_rest_url_request(None, page)
             json_data = self.render_to_json(request_url)
             self.save_post_to_db(json_data)
@@ -66,6 +67,8 @@ class FacebookPostsHarvester:
         dictFacebookPosts = json_data['data']
         for item in dictFacebookPosts:
             try:
+                if item["message"] is None:
+                    continue
                 item["_id"] = str(item['id'])
                 doc = self.db.save(item)
                 print "SAVED" + str(doc) +"=>" + str(item)
@@ -77,7 +80,8 @@ class FacebookPostsHarvester:
             except:
                 os.system('clear')
                 print "Post with id: " + item['id'] + " Already exists!..."
-                #time.sleep(1)
+                request_url = self.create_rest_url_request(str(item['id']),None)
+                json_data = self.render_to_json(request_url)
                 self.save_comments_to_db(str(item['id']), json_data)
                 pass
             #return True
@@ -127,6 +131,7 @@ def main():
     #####################################
     ###List of FB Pages to search in####
     pages = ["MunicipioQuito","ObrasQuito","ecuavisa","rts.quito","elnoticierotc","ultimasnoticiasec","comunidadquitoecuavisa"]
+    #pages = ["comunidadquitoecuavisa"]
     ###Root URL of Facebook Graph###
     graph_url = "https://graph.facebook.com"
     #Create Facebook Harvest Object
