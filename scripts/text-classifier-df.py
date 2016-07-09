@@ -1,5 +1,7 @@
 
 from textblob.classifiers import NaiveBayesClassifier
+from textblob import TextBlob
+from textblob.exceptions import *
 
 train = [
 	('La ciudad tiene mucha inseguridad','seg'),
@@ -31,11 +33,14 @@ test = [
 	('Imposible circular por la via interoceanica, existe demasiado trafico','tra')
 ]
 
-cl = NaiveBayesClassifier(train)
+translated_sentences = [(str(TextBlob(sentence).translate(to='en')), category) for (sentence, category) in train]
+
+cl = NaiveBayesClassifier(translated_sentences)
 
 for (sentence, category) in test:
+	translation = TextBlob(sentence)
 	print '=================================================='
-	print 'Oracion: ' + sentence + ', Categoria: ' + category + ', Categoria Adivinada: ' + str(cl.classify(sentence))
+	print 'Oracion Espanol: ' + sentence + '\nOracion Ingles: ' + str(translation.translate(to='en')) + '\nCategoria: ' + category + '\nCategoria Adivinada: ' + str(cl.classify(str(translation.translate(to='en'))))
 	print '=================================================='
 
 print 'Exactitud: ' + str(cl.accuracy(test))
