@@ -12,6 +12,7 @@ from nltk.sentiment.util import *
 from nltk import tokenize
 from textblob import TextBlob
 from textblob.exceptions import *
+from datetime import datetime
 
 def main():
 	#google_service = build('translate', 'v2', developerKey='AIzaSyCAN1nFmkgIWhQ-74XB9Or_Bks-D25OGSQ')
@@ -74,8 +75,8 @@ def main():
   server.resource.credentials = ('admin','admin')
   db_tweets = server['quito_tweets']
   db_facebook = server['quito_fb_posts']
-  rows_t = db_tweets.view('proj/view_df_vm_tweets',limit=5000)
-  rows_f = db_facebook.view('proj/view_df_vm_facebook',limit=5000)
+  rows_t = db_tweets.view('proj/view_df_vm_tweets',limit=100)
+  rows_f = db_facebook.view('proj/view_df_vm_facebook',limit=100)
   #row_t = [ t for t in rows_t.rows if t.value['texto'] in lista_obras_publicas ]
 
   try:
@@ -94,6 +95,7 @@ def main():
     sentences_f = []
     sentences_f = tokenize.sent_tokenize(row_f.value['texto'])
 
+    average = 0
     for sentence in sentences_t:
       try:
         print '==============================================='
@@ -101,15 +103,23 @@ def main():
         translation = TextBlob(sentence)
         print('Ingles: ' + str(translation.translate(to='en')))
         ss = sid.polarity_scores(str(translation.translate(to='en')))
-        row_t.value['intensidad'] = ss['compound']
-        row_t.value['origen'] = str('twitter')
-        row_t.value['categoria'] = None
+        average += ss['compound']
+        #print date_string
+        #EEE MMM dd HH:mm:ss Z yyyy
         for k in sorted(ss):
           print('{0}: {1}, '.format(k, ss[k]))
         print '==============================================='
       except NotTranslated:
         pass
 
+    row_t.value['intensidad'] = (average/len(sentences_t)) if len(sentences_t) > 0 else 1
+    row_t.value['origen'] = str('twitter')
+    row_t.value['categoria'] = None
+    date = datetime.strptime(row_t.value['fecha'],'%a %b %d %H:%M:%S +0000 %Y')#.replace(tzinfo=pytz.UTC)
+    date_string = date.strftime('%d/%m/%Y %H:%M:%S')
+    row_t.value['fecha'] = str(date_string)
+
+    average = 0
     for sentence in sentences_f:
       try:
         print '==============================================='
@@ -117,9 +127,9 @@ def main():
         translation = TextBlob(sentence)
         print('Ingles: ' + str(translation.translate(to='en')))
         ss = sid.polarity_scores(str(translation.translate(to='en')))
-        row_f.value['intensidad'] = ss['compound']
-        row_f.value['origen'] = str('facebook')
-        row_f.value['categoria'] = None
+        average += ss['compound']
+        #print date_string
+        #2016-04-25T18:37:21+0000
         for k in sorted(ss):
           print('{0}: {1}, '.format(k, ss[k]))
           #row_t.value['intensidad'] = ss[0]
@@ -127,8 +137,16 @@ def main():
       except NotTranslated:
         pass
 
+    row_f.value['intensidad'] = (average/len(sentences_f)) if len(sentences_f) > 0 else 1
+    row_f.value['origen'] = str('facebook')
+    row_f.value['categoria'] = None
+    date = datetime.strptime(row_f.value['fecha'],'%Y-%m-%dT%H:%M:%S+0000')#.replace(tzinfo=pytz.UTC)
+    date_string = date.strftime('%d/%m/%Y %H:%M:%S')
+    row_f.value['fecha'] = str(date_string)
+
     try:
-        doc = db_master.save(row_t.value)
+        doc_t = db_master.save(row_t.value)
+        doc_f = db_master.save(row_f.value)
     except:
         print 'Error Saving Register ' + row_t.value['codigo']
         pass
