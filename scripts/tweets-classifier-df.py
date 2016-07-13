@@ -1,9 +1,12 @@
 # This python script help us to clean the harvested tweets and facebook posts to get just those that can give us any value to our project
 # Author: Diego Flores
-# from googleapiclient.discovery import build
+# Packages/Libraries import
 import couchdb
 import urllib2
 import json
+import random
+import math
+import time
 from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import subjectivity
 from nltk.sentiment import SentimentAnalyzer
@@ -14,87 +17,105 @@ from textblob import TextBlob
 from textblob.exceptions import *
 from datetime import datetime
 
+#Set category function
+def set_category(json, category):
+  json.value['categoria'] = category
+  return json
+
+#Get Random Geo Location for Facebook Posts and empty Tweets Geo Data within Quito limits
+def get_random_geo():
+  lat = random.uniform(-78.586922,-78.274155)
+  lon = random.uniform(-0.395161, 0.021973)
+  return (lat, lon)
+
+#Main function
 def main():
-	#google_service = build('translate', 'v2', developerKey='AIzaSyCAN1nFmkgIWhQ-74XB9Or_Bks-D25OGSQ')
-	#string = "Esto es injusto, no permitire que nos maltraten"
-	#API URL
-	#api_url = "http://text-processing.com/api/sentiment/"
-	#json_object = render_to_json(api_url + "language=spanish&text=" + string)
-	#string_to_translate = "Este viernes ire al cine a ver la mejor pelicula del mundo"
-	#json_object = google_service.translations().list(
-	#	source='sp',
-	#	target='en',
-	#	q=[string_to_translate]
-	#	).execute()
-	#print json_object
-  #n_instances = 100
-  #subj_docs = [(sent, 'subj') for sent in subjectivity.sents(categories='subj')[:n_instances]]
-  #obj_docs = [(sent, 'obj') for sent in subjectivity.sents(categories='obj')[:n_instances]]
+  #Init all category arrays
+  obr_list = []
 
-  #train_subj_docs = subj_docs[:80]
-  #test_subj_docs = subj_docs[80:100]
-  #train_obj_docs = obj_docs[:80]
-  #test_obj_docs = obj_docs[80:100]
-  #training_docs = train_subj_docs+train_obj_docs
-  #testing_docs = test_subj_docs+test_obj_docs
-  #sentim_analyzer = SentimentAnalyzer()
-  #all_words_neg = sentim_analyzer.all_words([mark_negation(doc) for doc in training_docs])
-  #unigram_feats = sentim_analyzer.unigram_word_feats(all_words_neg, min_freq=4)
+  seg_list = []
 
-  #sentim_analyzer.add_feat_extractor(extract_unigram_feats, unigrams=unigram_feats)
-  #training_set = sentim_analyzer.apply_features(training_docs)
-  #test_set = sentim_analyzer.apply_features(testing_docs)
-  #trainer = NaiveBayesClassifier.train
-  #classifier = sentim_analyzer.train(trainer, training_set)
-  
-  #for key,value in sorted(sentim_analyzer.evaluate(test_set).items()):
-  #  print('{0}: {1}'.format(key, value))
+  tra_list = []
 
-  #http://localhost:5984/quito_tweets/_design/proj/_view/ecuadorTweets?limit=10
+  sal_list = []
 
-  lista_obras_publicas = [
-  '@QuitoVigila',
-  'parque',
-  'baches',
-  'huecos',
-  'charcos',
-  'muros',
-  'vereda',
-  'veredas',
-  'calles',
-  'via',
-  'vias',
-  'pavimento',
-  'adoquinado',
-  'obras',
-  'obstaculos',
-  'trabajadores',
-  ]
+  lim_list = []
 
-  server = couchdb.Server('http://localhost:5984/')  #('http://115.146.93.184:5984/')
+  #Load all category files
+  with open('obr.txt','r') as txtfile:
+    obr_list = [w for w in txtfile]
+    txtfile.close()
+
+  with open('seg.txt','r') as txtfile:
+    seg_list = [w for w in txtfile]
+    txtfile.close()
+
+  with open('tra.txt','r') as txtfile:
+    tra_list = [w for w in txtfile]
+    txtfile.close()
+
+  with open('lim.txt','r') as txtfile:
+    lim_list = [w for w in txtfile]
+    txtfile.close()
+
+  #Set DB configuration and variables
+  server = couchdb.Server('http://localhost:5984/')
   server.resource.credentials = ('admin','admin')
   db_tweets = server['quito_tweets']
   db_facebook = server['quito_fb_posts']
-  rows_t = db_tweets.view('proj/view_df_vm_tweets',limit=100)
-  rows_f = db_facebook.view('proj/view_df_vm_facebook',limit=100)
-  #row_t = [ t for t in rows_t.rows if t.value['texto'] in lista_obras_publicas ]
+  #rows_t = db_tweets.view('proj/view_df_vm_tweets',limit=5000)
+  #Get all filtered tweets Couch DB View
+  rows_t = db_tweets.view('proj/view_df_vm_tweets')
+  #rows_f = db_facebook.view('proj/view_df_vm_facebook',limit=5000)
+  #Get all filtered facebook feed Couch DB View
+  rows_f = db_facebook.view('proj/view_df_vm_facebook')
+  
+  #Twitter classification
+  rows_t_obr = [set_category(t,'obr') for t in rows_t.rows if any(word in t.value['texto'].encode('utf-8') for word in obr_list)]
+  rows_t_seg = [set_category(t,'seg') for t in rows_t.rows if any(word in t.value['texto'].encode('utf-8') for word in seg_list)]
+  rows_t_tra = [set_category(t,'tra') for t in rows_t.rows if any(word in t.value['texto'].encode('utf-8') for word in tra_list)]
+  rows_t_lim = [set_category(t,'lim') for t in rows_t.rows if any(word in t.value['texto'].encode('utf-8') for word in lim_list)]
 
+  print 'Obras Publicas Twitter: ' + str(len(rows_t_obr))
+  print 'Seguridad Twitter: ' + str(len(rows_t_seg))
+  print 'Transito Twitter: ' + str(len(rows_t_tra))
+  print 'Limpieza Twitter: ' + str(len(rows_t_lim))
+
+  #Facebook classification
+  rows_f_obr = [set_category(f,'obr') for f in rows_f.rows if any(word in f.value['texto'].encode('utf-8') for word in obr_list)]
+  rows_f_seg = [set_category(f,'seg') for f in rows_f.rows if any(word in f.value['texto'].encode('utf-8') for word in seg_list)]
+  rows_f_tra = [set_category(f,'tra') for f in rows_f.rows if any(word in f.value['texto'].encode('utf-8') for word in tra_list)]
+  rows_f_lim = [set_category(f,'lim') for f in rows_f.rows if any(word in f.value['texto'].encode('utf-8') for word in lim_list)]
+
+  print 'Obras Publicas Facebook: ' + str(len(rows_f_obr))
+  print 'Seguridad Facebook: ' + str(len(rows_f_seg))
+  print 'Transito Facebook: ' + str(len(rows_f_tra))
+  print 'Limpieza Facebook: ' + str(len(rows_f_lim))
+
+  time.sleep(500)
+  #Set Twitter and facebook arrays
+  rows_t = rows_t_obr + rows_t_seg + rows_t_tra + rows_t_lim  
+  rows_f = rows_f_obr + rows_f_seg + rows_f_tra + rows_f_lim
+
+  #Create or set DB
   try:
     db_master = server.create('db_master')
   except:
     db_master = server['db_master']
 
-  #rows = db.view('proj/ecuadorTweets',limit=100)
+  #Init SentimentIntensityAnalyzer
   sid = SentimentIntensityAnalyzer()
-  #print rows.rows
+  
+  #print retrieved rows after cleaning
+  print rows_t
+  print rows_f
 
-  for row_t, row_f in zip(rows_t.rows, rows_f.rows):
-    #print row
+  for row_t in rows_t:
+    #Init Facebook Feed sentences and tokenize
     sentences_t = []
     sentences_t = tokenize.sent_tokenize(row_t.value['texto'])
-    sentences_f = []
-    sentences_f = tokenize.sent_tokenize(row_f.value['texto'])
 
+    #Translate Text and get Compound Polarity value
     average = 0
     for sentence in sentences_t:
       try:
@@ -104,21 +125,36 @@ def main():
         print('Ingles: ' + str(translation.translate(to='en')))
         ss = sid.polarity_scores(str(translation.translate(to='en')))
         average += ss['compound']
-        #print date_string
-        #EEE MMM dd HH:mm:ss Z yyyy
+        
         for k in sorted(ss):
           print('{0}: {1}, '.format(k, ss[k]))
         print '==============================================='
       except NotTranslated:
         pass
 
-    row_t.value['intensidad'] = (average/len(sentences_t)) if len(sentences_t) > 0 else 1
+    #Set necessary variables
+    row_t.value['intensidad'] = math.ceil((100*average / (len(sentences_t) if len(sentences_t) > 0 else 1)))
     row_t.value['origen'] = str('twitter')
-    row_t.value['categoria'] = None
     date = datetime.strptime(row_t.value['fecha'],'%a %b %d %H:%M:%S +0000 %Y')#.replace(tzinfo=pytz.UTC)
-    date_string = date.strftime('%d/%m/%Y %H:%M:%S')
+    date_string = date.strftime('%Y-%m-%d')
     row_t.value['fecha'] = str(date_string)
+    if row_t.value['coordenadas'] is None:
+      lat, lon = get_random_geo()
+      row_t.value['coordenadas'] = {'type':'Point', 'coordinates':[lat,lon]}
 
+    try:
+      #Save to the DB
+      doc_t = db_master.save(row_t.value)
+    except:
+      print 'Error Saving Register ' + row_t.value['codigo']
+      pass
+
+  for row_f in rows_f:
+    #Init Facebook Feed sentences and tokenize
+    sentences_f = []
+    sentences_f = tokenize.sent_tokenize(row_f.value['texto'])
+
+    #Translate Text and get Compound Polarity value
     average = 0
     for sentence in sentences_f:
       try:
@@ -128,31 +164,28 @@ def main():
         print('Ingles: ' + str(translation.translate(to='en')))
         ss = sid.polarity_scores(str(translation.translate(to='en')))
         average += ss['compound']
-        #print date_string
-        #2016-04-25T18:37:21+0000
         for k in sorted(ss):
           print('{0}: {1}, '.format(k, ss[k]))
-          #row_t.value['intensidad'] = ss[0]
         print '==============================================='
       except NotTranslated:
         pass
 
-    row_f.value['intensidad'] = (average/len(sentences_f)) if len(sentences_f) > 0 else 1
+    #Set necessary variables
+    row_f.value['intensidad'] = math.ceil((100*average / (len(sentences_f) if len(sentences_f) > 0 else 1)))
     row_f.value['origen'] = str('facebook')
-    row_f.value['categoria'] = None
-    date = datetime.strptime(row_f.value['fecha'],'%Y-%m-%dT%H:%M:%S+0000')#.replace(tzinfo=pytz.UTC)
-    date_string = date.strftime('%d/%m/%Y %H:%M:%S')
+    date = datetime.strptime(row_f.value['fecha'],'%Y-%m-%dT%H:%M:%S+0000')
+    date_string = date.strftime('%Y-%m-%d')
     row_f.value['fecha'] = str(date_string)
+    if row_f.value['coordenadas'] is None:
+      lat, lon = get_random_geo()
+      row_f.value['coordenadas'] = {'type':'Point', 'coordinates':[lat,lon]}
 
     try:
-        doc_t = db_master.save(row_t.value)
-        doc_f = db_master.save(row_f.value)
+      #Save to the DB
+      doc_f = db_master.save(row_f.value)
     except:
-        print 'Error Saving Register ' + row_t.value['codigo']
-        pass
+      print 'Error Saving Register ' + row_f.value['codigo']
+      pass
 
-
-    #sentim_analyzer.evaluate()
-
-
+#Main function call
 if __name__ == '__main__': main() 
