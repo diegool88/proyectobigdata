@@ -1,15 +1,19 @@
+@AMTQuito
+carril cerrado
+paso deprimido
+paso elevado
+no fluye
+fluir
+tunel
+contraflujo
 trafico
-tr�fico
 transito
-tr�nsito
 choque
 accidente
 estancamiento
 estancado
 no se mueve
 semaforo
-sem�foro
-sem�foros
 semaforos
 paso zebra
 rompe velocidades
@@ -27,3 +31,16 @@ taxi
 ruta
 cerrada
 taxiruta
+tráfico
+tránsito
+semáforo
+semáforos
+peatón
+peatones
+atropello
+poste
+parter
+vereda
+túnel
+incidente
+conduzca con precaución
