@@ -14,6 +14,7 @@ from nltk.corpus import subjectivity
 from nltk.sentiment import SentimentAnalyzer
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.sentiment.util import *
+from nltk import word_tokenize
 from nltk import tokenize
 from textblob import TextBlob
 from textblob.exceptions import *
@@ -85,17 +86,33 @@ def main():
   rows_f = db_facebook.view('proj/view_df_vm_facebook')
   
   #Twitter classification
-  #rows_t_obr = [set_category(t,'obr') for t in rows_t.rows if any(word.lower() in t.value['texto'].lower().encode('utf-8') for word in obr_list)]
-  #rows_t_seg = [set_category(t,'seg') for t in rows_t.rows if any(word.lower() in t.value['texto'].lower().encode('utf-8') for word in seg_list)]
-  #rows_t_tra = [set_category(t,'tra') for t in rows_t.rows if any(word.lower() in t.value['texto'].lower().encode('utf-8') for word in tra_list)]
-  #rows_t_lim = [set_category(t,'lim') for t in rows_t.rows if any(word.lower() in t.value['texto'].lower().encode('utf-8') for word in lim_list)]
+  rows_t_obr = [set_category(t,'obr') for t in rows_t.rows if any(word.lower().rstrip('\n') in t.value['texto'].lower().encode('utf-8').split() for word in obr_list)]
+  rows_t_seg = [set_category(t,'seg') for t in rows_t.rows if any(word.lower().rstrip('\n') in t.value['texto'].lower().encode('utf-8').split() for word in seg_list)]
+  rows_t_tra = [set_category(t,'tra') for t in rows_t.rows if any(word.lower().rstrip('\n') in t.value['texto'].lower().encode('utf-8').split() for word in tra_list)]
+  rows_t_lim = [set_category(t,'lim') for t in rows_t.rows if any(word.lower().rstrip('\n') in t.value['texto'].lower().encode('utf-8').split() for word in lim_list)]
 
   #Comparing method 2
-  rows_t_obr = [set_category(t,'obr') for t in rows_t.rows if any(find_whole_word(word.lower(),t.value['texto'].lower().encode('utf-8')) for word in obr_list)]
-  rows_t_seg = [set_category(t,'seg') for t in rows_t.rows if any(find_whole_word(word.lower(),t.value['texto'].lower().encode('utf-8')) for word in seg_list)]
-  rows_t_tra = [set_category(t,'tra') for t in rows_t.rows if any(find_whole_word(word.lower(),t.value['texto'].lower().encode('utf-8')) for word in tra_list)]
-  rows_t_lim = [set_category(t,'lim') for t in rows_t.rows if any(find_whole_word(word.lower(),t.value['texto'].lower().encode('utf-8')) for word in lim_list)]
+  #rows_t_obr = [set_category(t,'obr') for t in rows_t.rows if any(find_whole_word(word.lower(),t.value['texto'].lower().encode('utf-8')) for word in obr_list)]
+  #rows_t_seg = [set_category(t,'seg') for t in rows_t.rows if any(find_whole_word(word.lower(),t.value['texto'].lower().encode('utf-8')) for word in seg_list)]
+  #rows_t_tra = [set_category(t,'tra') for t in rows_t.rows if any(find_whole_word(word.lower(),t.value['texto'].lower().encode('utf-8')) for word in tra_list)]
+  #rows_t_lim = [set_category(t,'lim') for t in rows_t.rows if any(find_whole_word(word.lower(),t.value['texto'].lower().encode('utf-8')) for word in lim_list)]
 
+  #list_p = []
+
+  #with open('test.txt','r') as txtfile:
+  #  list_p = [w for w in txtfile]
+  #  txtfile.close()
+
+  #for t in rows_t.rows:
+  #  print 'Lista de palabras: '
+  #  for w in list_p:
+  #    print 'Palabra: ' + w
+  #  print 'Texto: ' + t.value['texto'].lower().encode('utf-8')
+  #  print 'Arreglo: ' + str(t.value['texto'].lower().encode('utf-8').split())
+  #  print 'Contiene Palabras: ' + str(any(find_whole_word(word.lower().rstrip('\n'),t.value['texto'].lower().encode('utf-8')) for word in list_p))
+  #  print 'Contiene Palabras: ' + str(any(word.lower().rstrip('\n') in t.value['texto'].lower().encode('utf-8').split() for word in list_p))
+    #print 'Contiene Palabras: ' + str(True if len([word for word in list_p if word.lower() in t.value['texto'].lower().encode('utf-8').split()]) > 0 else False)
+  #  time.sleep(10)
 
   #for t in rows_t_obr:
   #  for w in obr_list:
@@ -122,16 +139,16 @@ def main():
   print 'Limpieza Twitter: ' + str(len(rows_t_lim))
 
   #Facebook classification
-  #rows_f_obr = [set_category(f,'obr') for f in rows_f.rows if any(word.lower() in f.value['texto'].lower().encode('utf-8') for word in obr_list)]
-  #rows_f_seg = [set_category(f,'seg') for f in rows_f.rows if any(word.lower() in f.value['texto'].lower().encode('utf-8') for word in seg_list)]
-  #rows_f_tra = [set_category(f,'tra') for f in rows_f.rows if any(word.lower() in f.value['texto'].lower().encode('utf-8') for word in tra_list)]
-  #rows_f_lim = [set_category(f,'lim') for f in rows_f.rows if any(word.lower() in f.value['texto'].lower().encode('utf-8') for word in lim_list)]
+  rows_f_obr = [set_category(f,'obr') for f in rows_f.rows if any(word.lower().rstrip('\n') in f.value['texto'].lower().encode('utf-8').split() for word in obr_list)]
+  rows_f_seg = [set_category(f,'seg') for f in rows_f.rows if any(word.lower().rstrip('\n') in f.value['texto'].lower().encode('utf-8').split() for word in seg_list)]
+  rows_f_tra = [set_category(f,'tra') for f in rows_f.rows if any(word.lower().rstrip('\n') in f.value['texto'].lower().encode('utf-8').split() for word in tra_list)]
+  rows_f_lim = [set_category(f,'lim') for f in rows_f.rows if any(word.lower().rstrip('\n') in f.value['texto'].lower().encode('utf-8').split() for word in lim_list)]
 
   #Facebook classification opc 2
-  rows_f_obr = [set_category(f,'obr') for f in rows_f.rows if any(find_whole_word(word.lower(),f.value['texto'].lower().encode('utf-8')) for word in obr_list)]
-  rows_f_seg = [set_category(f,'seg') for f in rows_f.rows if any(find_whole_word(word.lower(),f.value['texto'].lower().encode('utf-8')) for word in seg_list)]
-  rows_f_tra = [set_category(f,'tra') for f in rows_f.rows if any(find_whole_word(word.lower(),f.value['texto'].lower().encode('utf-8')) for word in tra_list)]
-  rows_f_lim = [set_category(f,'lim') for f in rows_f.rows if any(find_whole_word(word.lower(),f.value['texto'].lower().encode('utf-8')) for word in lim_list)]
+  #rows_f_obr = [set_category(f,'obr') for f in rows_f.rows if any(find_whole_word(word.lower(),f.value['texto'].lower().encode('utf-8')) for word in obr_list)]
+  #rows_f_seg = [set_category(f,'seg') for f in rows_f.rows if any(find_whole_word(word.lower(),f.value['texto'].lower().encode('utf-8')) for word in seg_list)]
+  #rows_f_tra = [set_category(f,'tra') for f in rows_f.rows if any(find_whole_word(word.lower(),f.value['texto'].lower().encode('utf-8')) for word in tra_list)]
+  #rows_f_lim = [set_category(f,'lim') for f in rows_f.rows if any(find_whole_word(word.lower(),f.value['texto'].lower().encode('utf-8')) for word in lim_list)]
 
   print 'Obras Publicas Facebook: ' + str(len(rows_f_obr))
   print 'Seguridad Facebook: ' + str(len(rows_f_seg))
@@ -151,7 +168,6 @@ def main():
   print 'Totales sin depuracion de repetidos: ' + str(len(rows_f))
   rows_f_dep = [set_temp_array(i) for i in rows_f if not is_on_temp_array(i)]
   print 'Totales con depuracion de repetidos: ' + str(len(rows_f_dep))
-
 
   #time.sleep(500)
 
