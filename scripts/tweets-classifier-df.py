@@ -159,12 +159,19 @@ def main():
   rows_t = rows_t_obr + rows_t_seg + rows_t_tra + rows_t_lim  
   rows_f = rows_f_obr + rows_f_seg + rows_f_tra + rows_f_lim
 
+
+  #for r in rows_t:
+  #  print str(r)
+  #  print str(r.value['texto'].encode('utf-8'))
+  #  print str(r.value['codigo'].encode('utf-8'))
+  #  time.sleep(5)
   #New List
   temp_array = []
   print 'Totales sin depuracion de repetidos: ' + str(len(rows_t))
   rows_t_dep = [set_temp_array(i) for i in rows_t if not is_on_temp_array(i)]
   print 'Totales con depuracion de repetidos: ' + str(len(rows_t_dep))
 
+  temp_array = []
   print 'Totales sin depuracion de repetidos: ' + str(len(rows_f))
   rows_f_dep = [set_temp_array(i) for i in rows_f if not is_on_temp_array(i)]
   print 'Totales con depuracion de repetidos: ' + str(len(rows_f_dep))
@@ -181,10 +188,10 @@ def main():
   sid = SentimentIntensityAnalyzer()
   
   #print retrieved rows after cleaning
-  print rows_t_dep
-  print rows_f_dep
+  #print rows_t_dep
+  #print rows_f_dep
 
-  for row_t in rows_t_dep:
+  for row_t in rows_t:
     #Init Facebook Feed sentences and tokenize
     sentences_t = []
     sentences_t = tokenize.sent_tokenize(row_t.value['texto'])
@@ -223,7 +230,7 @@ def main():
       print 'Error Saving Register ' + row_t.value['codigo']
       pass
 
-  for row_f in rows_f_dep:
+  for row_f in rows_f:
     #Init Facebook Feed sentences and tokenize
     sentences_f = []
     sentences_f = tokenize.sent_tokenize(row_f.value['texto'])
