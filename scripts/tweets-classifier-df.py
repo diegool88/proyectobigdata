@@ -181,10 +181,10 @@ def main():
   sid = SentimentIntensityAnalyzer()
   
   #print retrieved rows after cleaning
-  print rows_t
-  print rows_f
+  print rows_t_dep
+  print rows_f_dep
 
-  for row_t in rows_t:
+  for row_t in rows_t_dep:
     #Init Facebook Feed sentences and tokenize
     sentences_t = []
     sentences_t = tokenize.sent_tokenize(row_t.value['texto'])
@@ -223,7 +223,7 @@ def main():
       print 'Error Saving Register ' + row_t.value['codigo']
       pass
 
-  for row_f in rows_f:
+  for row_f in rows_f_dep:
     #Init Facebook Feed sentences and tokenize
     sentences_f = []
     sentences_f = tokenize.sent_tokenize(row_f.value['texto'])
